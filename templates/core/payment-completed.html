@@ -1,0 +1,216 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.3/jspdf.umd.min.js"></script>
+
+<div id="content-to-print">
+    <nav aria-label="breadcrumb" class="w-100 float-left">
+        <ol class="breadcrumb parallax justify-content-center" data-source-url="img/banner/parallax.jpg" style="background-image: url(&quot;img/banner/parallax.jpg&quot;); background-position: 50% 0.809717%;">
+            <li class="breadcrumb-item active"><a href="#">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">order-confirmation</li>
+        </ol>
+    </nav>
+    <div class="order-inner float-left w-100">
+        <div class="container">
+            <div class="row">
+                <div id="order-confirmation" class="card float-left w-100 mb-10">
+                    <div class="card-block p-20">
+                        <h3 class="card-title text-success">Your order is confirmed</h3>
+                        <p>An email has been sent to your mail address haloli@gmail.com.</p>
+                    </div>
+                </div>
+                <div id="order-itens" class="card float-left w-100 mb-10">
+                    <div class="card-block p-20">
+                        <h3 class="card-title">order items</h3>
+                        {% for product_id, item in cart_data.items %}
+                        <div class="order-confirmation-table float-left w-100">
+                            <div class="order-line float-left w-100">
+                                <div class="row">
+                                    <div class="col-sm-1 col-xs-3 float-left">
+                                        <img src="{{ item.image }}" alt="">
+                                    </div>
+                                    <div class="col-sm-5 col-xs-9 details float-left">
+                                        <span>{{ item.title }}</span>
+                                    </div>
+                                    <div class="col-sm-6 col-xs-12 qty float-left d-flex">
+                                        <div class="col-xs-5 col-sm-5 text-sm-right text-xs-left">${{ item.price }}</div>
+                                        <div class="col-xs-2 col-sm-2">X{{ item.qty }}</div>
+                                        <div class="col-xs-5 col-sm-5 text-sm-right bold">${% widthratio item.price 1 item.qty %}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="float-left w-100">
+                            <table class="float-left w-100 mb-30">
+                                <tbody>
+                                    <tr class="mb-10">
+                                    </tr>
+                                    <tr class="mb-10">
+                                    </tr>
+                                    <tr class="font-weight-bold">
+                                    </tr>
+                                </tbody>
+                            </table>
+                            {% endfor %}
+                            <td><span class="text-uppercase">Total</span> (tax excl.)</td>
+                            <td class="text-right">${{ cart_total_amount|floatformat:2 }}</td>
+                        </div>
+                        <button id="print-button" class="btn btn-primary">Print</button>
+                        <button id="download-button" class="btn btn-primary">Download PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Footer -->
+    <div class="block-newsletter">
+        <div class="parallax" data-source-url="img/banner/parallax.jpg" style="background-image:url(img/banner/parallax.jpg); background-position:50% 65.8718%;">
+            <div class="container">
+                <div class="tt-newsletter col-sm-7">
+                    <h2 class="text-uppercase">Subscribe to our Newsletter</h2>
+                </div>
+                <div class="block-content col-sm-5">
+                    <form method="post" action="contact-us.html">
+                        <div class="input-group">
+                            <input type="email" name="email" value="" placeholder="Email address.." required="" class="form-control">
+                            <span class="input-group-btn">
+                                <button class="btn btn-theme text-uppercase btn-primary" type="submit">Subscribe</button>
+                            </span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="page-footer font-small footer-default">
+        <div class="container text-center text-md-left">
+            <div class="row">
+                <div class="col-md-2 footer-cms footer-column">
+                    <div class="ttcmsfooter">
+                        <div class="footer-logo"><img src="img/logos/footer-logo.png" alt="footer-logo"></div>
+                        <div class="footer-desc">At vero eos et accusamus et iusto odio dignissimos ducimus, duis faucibus enim vitae</div>
+                    </div>
+                </div>
+                <div class="col-md-2 footer-column">
+                    <div class="title">
+                        <a href="#company" class="font-weight-normal text-capitalize mb-10" data-toggle="collapse" aria-expanded="false">company</a>
+                    </div>
+                    <ul id="company" class="list-unstyled collapse">
+                        <li>
+                            <a href="#">search</a>
+                        </li>
+                        <li>
+                            <a href="#">New Products</a>
+                        </li>
+                        <li>
+                            <a href="category.html">Best Collection</a>
+                        </li>
+                        <li>
+                            <a href="wishlist.html">wishlist</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-2 footer-column">
+                    <div class="title">
+                        <a href="#products" class="font-weight-normal text-capitalize mb-10" data-toggle="collapse" aria-expanded="false">products</a>
+                    </div>
+                    <ul id="products" class="list-unstyled collapse">
+                        <li>
+                            <a href="blog-details.html">blog</a>
+                        </li>
+                        <li>
+                            <a href="about-us.html">about us</a>
+                        </li>
+                        <li>
+                            <a href="contact-us.html">contact us</a>
+                        </li>
+                        <li>
+                            <a href="my-account.html">my account</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-2 footer-column">
+                    <div class="title">
+                        <a href="#account" class="font-weight-normal text-capitalize mb-10" data-toggle="collapse" aria-expanded="false">your account</a>
+                    </div>
+                    <ul id="account" class="list-unstyled collapse">
+                        <li>
+                            <a href="blog-details.html">personal info</a>
+                        </li>
+                        <li>
+                            <a href="#">orders</a>
+                        </li>
+                        <li>
+                            <a href="contact-us.html">addresses</a>
+                        </li>
+                        <li>
+                            <a href="my-account.html">my wishlists</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-2 footer-column">
+                    <div class="title">
+                        <a href="#information" class="font-weight-normal text-capitalize mb-10" data-toggle="collapse" aria-expanded="false">store information</a>
+                    </div>
+                    <ul id="information" class="list-unstyled collapse">
+                        <li class="contact-detail links">
+                            <span class="address">
+                                <span class="icon"><i class="material-icons">location_on</i></span>
+                                <span class="data"> 4030, Central Bazzar, opp. Varachha Police Station, Varachha Main Road, Surat, Gujarat 395006, India</span>
+                            </span>
+                        </li>
+                        <li class="links">
+                            <span class="contact">
+                                <span class="icon"><i class="material-icons">phone</i></span>
+                                <span class="data"><a href="tel:(99)55669999">+ (99) 55-669-999</a></span>
+                            </span>
+                        </li>
+                        <li class="links">
+                            <span class="email">
+                                <span class="icon"><i class="material-icons">email</i></span>
+                                <span class="data"><a href="mailto:demo.store@gmail.com">demo.store@gmail.com</a></span>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Copyright -->
+        <div class="footer-bottom-wrap">
+            <div class="container">
+                <div class="row">
+                    <div class="footer-copyright text-center py-3">
+                        © 2019 - Boostrap theme by store™
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="#" id="goToTop" title="Back to top" class="btn-primary"><i class="material-icons arrow-up">keyboard_arrow_up</i></a>
+    </footer>
+    <!-- Footer -->
+</div>
+
+
+<script>
+document.getElementById("download-button").addEventListener("click", function() {
+    // Tạo một đối tượng jsPDF
+    var doc = new jsPDF();
+
+    // Lấy nội dung HTML cần in
+    var htmlContent = document.getElementById("content-to-print").innerHTML;
+
+    // Thêm nội dung HTML vào tài liệu PDF
+    doc.html(htmlContent, {
+        callback: function(doc) {
+            // Khi tài liệu đã được tạo, tải xuống bằng cách sử dụng hàm save của jsPDF
+            doc.save("document.pdf");
+        }
+    });
+});
+</script>
+
+<script>
+document.getElementById("print-button").addEventListener("click", function() {
+    window.print();
+});
+</script>
+{% endblock content %}

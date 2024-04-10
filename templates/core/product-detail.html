@@ -44,6 +44,7 @@
 				</div>
 				<div class="right-columm col-lg-7 col-md-7">
 					<div class="product-information">
+
 					<h4 class="product-title text-capitalize float-left w-100"><a href="product-details.html" class="float-left w-100">{{p.title}}</a></h4>
 					<div class="description">
 						{{p.description}}
@@ -60,16 +61,13 @@
 											<a href="#" class="review-down">(customer reviews)</a>
 
 											</div>
-											<ul class="countdown countdown1 float-left w-100">
-										  <li><span class="days">00</span><p class="days_text">Days</p></li>
-										  <li><span class="hours">00</span><p class="hours_text">Hours</p></li>
-										  <li><span class="minutes">00</span><p class="minutes_text">Minutes</p></li>
-										  <li><span class="seconds">00</span><p class="seconds_text">Seconds</p></li>
-										</ul>
-																<div class="price float-left w-100 d-flex">
-												<div class="regular-price">{{p.price}}</div>
-												<div class="old-price">{{p.old_price}}</div>
-											</div>
+
+													<div class="old-price" style="text-decoration: line-through;">{{ p.old_price }}</div>
+						<div id="current-product-price-{{ p.id }}"><strong>{{ p.price }}</strong></div>
+
+
+
+
 											<div class="product-variants float-left w-100">
 						<div class="col-md-3 col-sm-6 col-xs-12 size-options d-flex align-items-center">
 											<h5>Size:</h5>
@@ -99,14 +97,29 @@
 					</div>
 											<div class="btn-cart d-flex align-items-center float-left w-100">
 						<h5>qty:</h5>
-						<input value="1" type="number">
-												<h5> {{p.stock_count}} items in stock</h5>
-						<button type="button" class="btn btn-primary btn-cart m-0" data-target="#cart-pop" data-toggle="modal"><i class="material-icons">shopping_cart</i> Add To Cart</button>
+
+						<input value="1" type="number" id="product-quantity" name="" class="w-25 mb-10 product-quantity-{{ p.id }}">
+												<div class="product_extra-link2">
+						<h5> {{p.stock_count}} items in stock</h5>
+<!--						<input type="hidden" value="{{ p.id }}" id="product-id">-->
+<!--						<input type="hidden" id="product-title" value="{{ p.title }}">-->
+<!--							<input type="hidden" value="1" id="product-quantity" class="product-quantity-{{ p.id }}">-->
+							<input type="hidden" value="{{ p.pid }}"  class="product-pid-{{ p.id }}">
+							<input type="hidden" value="{{ p.image.url }}"  class="product-image-{{ p.id }}">
+
+							<input type="hidden" value="{{ p.id }}"  class="product-id-{{ p.id }}">
+							<input type="hidden" value="{{ p.title }}"  class="product-title-{{ p.id }}">
+
+<!--						<button type="submit" id="add-to-cart-btn" class="btn btn-primary btn-cart m-0" data-target="" data-toggle="l"><i class="material-icons">shopping_cart</i> Add To Cart</button>-->
+						<button type="submit" class="btn btn-primary btn-cart m-0" data-index="{{ p.id }}" id="add-to-cart-btn-btn-btn" ><i class="material-icons">shopping_cart</i><span>Add to cart</span></button>
+
 					</div>
 					<div class="tt-links d-flex align-items-center float-left w-100 mb-15">
+						<br>
 										<a class="link btn-compare"><i class="material-icons">equalizer</i><span>Compare</span></a>
 					<a href="wishlist.html" class="link btn-wishlist"><i class="material-icons">favorite</i><span>wishlist</span></a>
 					</div>
+												</div>
 					<div class="social-sharing float-left w-100">
 						<ul class="d-flex">
 							<li class="facebook">
@@ -170,16 +183,14 @@
 
 
 							<div class="ttreview-tab float-left w-100 p-30">
-							  <h2>Customer Reviews</h2>
-								<h5> {{ average_rating.rating|floatformat:1 }} trên 5.0</h5>
-								<strong class="text-success" id="review-res"></strong>
-
+							  <h2 class="mb-30" >Customer Reviews</h2>
+							<div class="comment-list">
 								{% for r in reviews %}
-								<div class="single-comment justify-content-between d-left mb-30">
-									<div class="user justify-content-between d-lex">
+								<div class="single-comment justify-content-between d-flex mb-30">
+									<div class="user justify-content-between d-flex">
 										<div class="thumb text-center">
-											<img style="width: 50px;height: 50px" src="https://png.pngtree.com/png-clipart/20200701/original/pngtree-black-default-avatar-png-image_5407174.jpg">
-											<a href="" class="font-heading text-broad">{{r.user.username}}</a>
+											<img style="width: 50px; height:50px" src="https://png.pngtree.com/png-clipart/20200701/original/pngtree-black-default-avatar-png-image_5407174.jpg">
+											<a href="#" class="font-heading text-brand">{{r.user.username|title}}</a>
 										</div>
 										<div class="desc">
 											<div class="d-flex justify-content-between mb-10">
@@ -202,73 +213,113 @@
 									</div>
 
 								</div>
-
-<!--							  <div class="review-title float-left w-100"><span class="user">admin</span> <span class="date">– February 14, 2019</span></div>-->
-<!--							  <div class="review-desc  float-left w-100">{{r.reviews}} </div>-->
+								{% endfor %}
 							</div>
-							{% endfor %}
+						</div>
 
-							  <form action="{% url 'core:ajax_add_review' p.id %}" class="rating-form float-left w-100 hide-comment-form" id="commentForm" method="POST">
-                                  {% csrf_token %}
+							<!-- <form action="{% url 'core:ajax-add-review' p.id %}" class="rating-form float-left w-100 hide-comment-form" id="commentForm" method="POST">
+								{% csrf_token %}
 
-									 <label for="r-textarea">Your Review</label>
+								   <label for="r-textarea">Your Review</label>
+								   <strong class="text-success" id="review-res"></strong>
 
-								  <div name="review" id="r-textarea" cols="30" rows="10" class="w-100">{{review_form.review}}</div>
+								<div name="review" id="r-textarea" cols="30" rows="10" class="w-100">{{review_form.review}}</div>
 
-									<div class="col-sm-12 float-left form-group">
-									 <label for="r-textarea">Your Rating</label>
-										{{review_form.rating}}
+								  <div class="col-sm-12 float-left form-group">
+								   <label for="r-textarea">Your Rating</label>
+									  {{review_form.rating}}
+								  </div>
+
+								 <input type="submit" class="btn btn-primary submit" value="Submit Review">
+							</form> -->
+
+							<div class="comment-form">
+								<h2 class="mb-15 add-review">Add a review</h2>
+								<strong class="text-success" id="review-res"></strong>
+								<div class="row">
+									<div class="col-lg-8 col-md-12">
+										<form class="form-contact comment_form hide-comment-form" action="{% url 'core:ajax-add-review' p.id %}" id="commentForm" method="POST">
+											{% csrf_token %}
+											<div class="row">
+												<div class="col-12">
+													<div class="form-group">
+														{{review_form.review}}
+													</div>
+												</div>
+												<div class="col-12">
+													<div class="form-group">
+														{{review_form.rating}}
+													</div>
+												</div>
+											</div>
+											<input type="button" class="btn btn-primary submit" value="Submit Review" onclick="submitReview(event)">
+										</form>
 									</div>
-
-                                   <input type="submit" class="btn btn-primary submit" value="Submit Review">
-							  </form>
+								</div>
 							</div>
-
-
+						</div>
+					</div>
 					</div>
 	</div>
 	</div>
 	</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-	$("#commentForm").submit(function(e){
-    e.preventDefault();
-    let dt = new Date();
-    let time = dt.getDay() + " " + monthNames[dt.getUTCMonth()] + ", " + dt.getFullYear();
-
+	function submitReview(event) {
+        // Ngăn chặn việc gửi biểu mẫu mặc định
+        event.preventDefault();
+        // Tuần tự hóa dữ liệu biểu mẫu
+        var formData = $('#commentForm').serialize();
+        // Gửi yêu cầu AJAX
     $.ajax({
-        data: $(this).serialize(),
-        method: $(this).attr("method"),
-        url: $(this).attr("action"),
-        dataType: "json",
+        type: 'POST',
+        url: $('#commentForm').attr('action'),
+        data: formData,
         success: function(res){
-            if(res.bool == true){
-                $("#review-res").html("Review Added successfully");
-                $(".hide-comment-form").hide();
-                let _html = '<div class="single-comment justify-content-between d-left mb-30">';
-				_html += '<div class="user justify-content-between d-lex">';
-				_html += '<div class="thumb text-center">';
-				_html += '<img src="">';
-				_html += '<a href="" class="font-heading text-broad">'+ res.context.user +'</a>';
-				_html += '</div>';
-				_html += '<div class="desc">';
-				_html += '<div class="d-flex justify-content-between mb-10">';
-				_html += '<div class="d-flex align-items-center">';
-				_html += '<span class="font-xs text-muted">'+ time +'</span>';
-				_html += '</div>';
-				for(let i = 1; i <= res.context.rating; i++){
-					_html += '<i class="fas fa-star text-warning"></i>';
-				}
-				_html += '</div>';
-				_html += '<p class="mb-10">'+ res.context.review +'</p>';
-				_html += '</div>';
-				_html += '</div>';
-				_html += '</div>';
+			console.log("comment saved to DB...");
+		// Tạo đối tượng Date
+		var dt = new Date();
+		// Lấy ngày tháng
+		var day = dt.getDate();
+		// Lấy tên tháng (index từ 0)
+		var month = dt.getMonth();
+		// Lấy năm
+		var year = dt.getFullYear();
+		// Chuyển đổi tên tháng từ index sang tên đầy đủ
+		var monthName = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][month];
+		// Tạo chuỗi thời gian
+		var time = day + ' ' + monthName + ', ' + year;
 
-                $(".comment-list").prepend(_html);
-            }
+    if(res.bool == true){
+        $("#review-res").html("Review Added successfully")
+        $(".hide-comment-form").hide()
+        $(".add-review").hide()
+
+        let _html = '<div class="single-comment justify-content-between d-flex mb-30">'
+        _html += '<div class="user justify-content-between d-flex">';
+        _html += '<div class="thumb text-center">'
+        _html += '<img src="">';
+        _html += '<a href="#" class="font-heading text-brand">'+ res.context.user +'</a>';
+        _html += '</div>';
+        _html += '<div class="desc">';
+        _html += '<div class="d-flex justify-content-between mb-10">';
+        _html += '<div class="d-flex align-items-center">';
+        _html += '<span class="font-xs text-muted">'+ time +'</span>';
+        _html += '</div>';
+        for(let i = 1; i <= res.context.rating; i++){
+            _html += '<i class="fas fa-star text-warning">';
         }
+        _html += '</div>';
+        _html += '<p class="mb-10">'+ res.context.review +'</p>';
+        _html += '</div>';
+        _html += '</div>';
+        _html += '</div>';
+
+        $(".comment-list").prepend(_html);
+        }
+    }
     });
-});
+}
 
 </script>
 	<div id="product-accessories" class="product-accessories my-40 w-100 float-left">
@@ -287,25 +338,17 @@
 										<div class="caption">
 											<h4 class="product-title text-capitalize"><a href="product-details.html">{{p.title}}</a></h4>
 										</div>
-										<div class="rating">
-											<div class="product-ratings d-inline-block align-middle">
-												<span class="fa fa-stack"><i class="material-icons">star</i></span>
-											   <span class="fa fa-stack"><i class="material-icons">star</i></span>
-											   <span class="fa fa-stack"><i class="material-icons">star</i></span>
-											   <span class="fa fa-stack"><i class="material-icons off">star</i></span>
-											   <span class="fa fa-stack"><i class="material-icons off">star</i></span>
-											   </div>
-										   </div>
+
 
 
 
 										<div class="price">
-											<div class="regular-price">${{p.price}}</div>
+											<div class="currunt-product-price">${{p.price}}</div>
 											<div class="old-price">${{p.old_price}}</div>
 										</div>
 										<div class="button-wrapper">
 										<div class="button-group text-center">
-												<button type="button" class="btn btn-primary btn-cart" data-target="#cart-pop" data-toggle="modal"><i class="material-icons">shopping_cart</i><span>Add to cart</span></button>
+												<button type="submit" id="add-to-cart" data-target="#cart-pop" data-toggle="modal"><i class="material-icons">shopping_cart</i><span>Add to cart</span></button>
 												<a href="wishlist.html" class="btn btn-primary btn-wishlist"><i class="material-icons">favorite</i><span>wishlist</span></a>
 												<button type="button" class="btn btn-primary btn-compare"><i class="material-icons">equalizer</i><span>Compare</span></button>
 												<button type="button" class="btn btn-primary btn-quickview"  data-toggle="modal" data-target="#product_view"><i class="material-icons">visibility</i><span>Quick View</span></button>
@@ -494,7 +537,7 @@
 					<div class="btn-cart d-flex align-items-center float-left w-100">
 						<h5>qty:</h5>
 						<input value="1" type="number">
-						<button type="button" class="btn btn-primary"><i class="material-icons">shopping_cart</i> Add To Cart</button>
+						<button type="submit" class="btn btn-primary" id="add"><i class="material-icons">shopping_cart</i> Add To Cart</button>
 					</div>
 				</div>
 			</div>

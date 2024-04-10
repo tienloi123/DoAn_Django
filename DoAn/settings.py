@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     #Customer Apps
     'core',
     'userauths',
+    'paypal.standard.ipn',
    
 ]
 
@@ -152,3 +153,6 @@ JAZZMIN_SETTINGS = {
 }
 
 AUTH_USER_MODEL = 'userauths.User'
+
+PAYPAL_RECEIVER_EMAIL = 'businessdestiny@gmail.com'
+PAYPAL_TEST = True

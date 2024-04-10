@@ -178,7 +178,7 @@
 												<button type="button" class="btn btn-primary btn-cart" data-target="#cart-pop" data-toggle="modal" disabled><i class="material-icons">shopping_cart</i><span>Out of stock</span></button>
 												<a href="wishlist.html" class="btn btn-primary btn-wishlist"><i class="material-icons">favorite</i><span>wishlist</span></a>
 												<button type="button" class="btn btn-primary btn-compare"><i class="material-icons">equalizer</i><span>Compare</span></button>
-												<button type="button" class="btn btn-primary btn-quickview"  data-toggle="modal" data-target="#product_view"><i class="material-icons">visibility</i><span>Quick View</span></button>
+												<a href="{% url 'core:product-detail' p.pid %}"><button type="button" class=""  data-toggle="modal" data-target="#product_view"><i class="material-icons">visibility</i><span>Quick View</span></button></a>
 											</div>
 							</div>
 						</div>

@@ -97,20 +97,22 @@
 		<div class="cart-wrapper">
 			<button type="button" class="btn">
 				<i class="material-icons">shopping_cart</i>
-				<span class="ttcount">2</span>			</button>
+				<span class="ttcount cart-items-count">{{ request.session.cart_data_obj|length }}</span>			</button>
 			<div id="cart-dropdown" class="cart-menu">
                 <ul class="w-100 float-left">
                   <li>
                     <table class="table table-striped">
                       <tbody>
+					  {% for product_id, item in cart_data.items %}
                         <tr>
-                          <td class="text-center"><a href="#"><img src="{% static 'img/products/01.jpg' %}" alt="01" title="01" height="104" width="80"></a></td>
-                          <td class="text-left product-name"><a href="#">Kính răm nâu</a>
+                          <td class="text-center"><a href="{% url 'core:cart' %}"><img src="{% static 'img/products/01.jpg' %}" alt="01" title="01" height="104" width="80"></a></td>
+                          <td class="text-left product-name"><a href="">{{ item.title }}</a>
 						  <div class="quantity float-left w-100">
                              <span class="cart-qty">1 × </span>
 							<span class="text-left price"> $20.00</span>						    </div>                          </td>
                           <td class="text-center close"><a class="close-cart"><i class="material-icons">close</i></a></td>
                         </tr>
+					   {% endfor %}
                       </tbody>
                     </table>
                   </li>
@@ -118,17 +120,17 @@
                     <table class="table price mb-30">
                       <tbody>
                         <tr>
-                          <td class="text-left"><strong>Total</strong></td>
-                          <td class="text-right"><strong>$2,122.00</strong></td>
+<!--                          <td class="text-left"><strong>Total</strong></td>-->
+<!--                          <td class="text-right"><strong>$2,122.00</strong></td>-->
                         </tr>
                       </tbody>
                     </table>
                   </li>
                   <li class="buttons w-100 float-left">
-                    <form action="cart_page.html">
+                    <form action="{% url 'core:cart' %}">
                       <input class="btn pull-left mt_10 btn-primary btn-rounded w-100" value="View cart" type="submit">
                     </form>
-                    <form action="checkout_page.html">
+                    <form action="{% url 'core:checkout' %}">
                       <input class="btn pull-right mt_10 btn-primary btn-rounded w-100" value="Checkout" type="submit">
                     </form>
                   </li>
@@ -881,11 +883,11 @@
 		<script src="{% static 'js/function.js' %}"></script>
 
 		</body>
-		<script>
-			window.tensorChatbotConfig = {
-			  chatbotId: "4651321c-b43f-4ebb-9be7-17e90e4a7bfe",
-			};
-			</script>
+<!--		<script>-->
+<!--			window.tensorChatbotConfig = {-->
+<!--			  chatbotId: "4651321c-b43f-4ebb-9be7-17e90e4a7bfe",-->
+<!--			};-->
+<!--			</script>-->
 			<script src="https://server.chatbot.tensor.vn/api/public/chatbot/file/7ac8df90447d7991af8bedf0e9.js" defer></script>
 
 </html>

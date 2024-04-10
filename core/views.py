@@ -1,9 +1,16 @@
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
+
 from core.models import Product, Category, Vendor, CartOrder, CartOrderItems, ProductImages, ProductReview, wishlist, \
     Address
 from core.forms import ProductReviewForm
 from django.db.models import Count, Avg
+from django.contrib import messages
+from django.urls import reverse
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from paypal.standard.forms import PayPalPaymentsForm
 
 
 # Create your views here.
@@ -113,6 +120,107 @@ def ajax_add_review(request, pid):
         {
             'bool': True,
             'context': context,
-            'avg_reviews': average_reviews
+            'average_reviews': average_reviews
         }
     )
+def add_to_cart(request):
+    cart_product = {}
+
+    cart_product[str(request.GET['id'])] = {
+        'title': request.GET['title'],
+        'qty': request.GET['qty'],
+        'price': request.GET['price'],
+        'image': request.GET['image'],
+        'pid': request.GET['pid'],
+    }
+    if 'cart_data_obj' in request.session:
+        if str(request.GET['id']) in request.session['cart_data_obj']:
+            cart_data = request.session['cart_data_obj']
+            cart_data[str(request.GET['id'])]['qty'] = int(cart_product[str(request.GET['id'])]['qty'])
+            cart_data.update(cart_data)
+            request.session['cart_data_obj'] = cart_data
+        else:
+            cart_data = request.session['cart_data_obj']
+            cart_data.update(cart_product)
+            request.session['cart_data_obj'] = cart_data
+    else:
+        request.session['cart_data_obj'] = cart_product
+    return JsonResponse({"data":request.session['cart_data_obj'],'totalcartitems':len(request.session['cart_data_obj'])})
+
+def cart_view(request):
+    cart_total_amount = 0
+    if 'cart_data_obj' in request.session:
+        for p_id, item in request.session['cart_data_obj'].items():
+            cart_total_amount += int(item['qty']) * float(item['price'])
+        return render(request, "core/cart.html", {"cart_data":request.session['cart_data_obj'],'totalcartitems':len(request.session['cart_data_obj']), 'cart_total_amount': cart_total_amount})
+    else:
+        messages.warning(request, "Giỏ hàng trống")
+        return redirect("core:index")
+
+def delete_item_from_cart(request):
+    product_id = str(request.GET['id'])
+    if 'cart_data_obj' in request.session:
+        if product_id in request.session['cart_data_obj']:
+            cart_data = request.session['cart_data_obj']
+            del request.session['cart_data_obj'][product_id]
+            request.session['cart_data_obj'] = cart_data
+
+    cart_total_amount = 0
+    if 'cart_data_obj' in request.session:
+        for p_id, item in request.session['cart_data_obj'].items():
+            cart_total_amount += int(item['qty']) * float(item['price'])
+
+    context = render_to_string("core/async/cart-list.html", {"cart_data":request.session['cart_data_obj'],'totalcartitems':len(request.session['cart_data_obj']), 'cart_total_amount': cart_total_amount})
+    return JsonResponse({"data": context, 'totalcartitems':len(request.session['cart_data_obj'])})
+
+def update_cart(request):
+    product_id = str(request.GET['id'])
+    product_qty = request.GET['qty']
+
+    if 'cart_data_obj' in request.session:
+        if product_id in request.session['cart_data_obj']:
+            cart_data = request.session['cart_data_obj']
+            cart_data[str(request.GET['id'])]['qty'] = product_qty
+            request.session['cart_data_obj'] = cart_data
+
+    cart_total_amount = 0
+    if 'cart_data_obj' in request.session:
+        for p_id, item in request.session['cart_data_obj'].items():
+            cart_total_amount += int(item['qty']) * float(item['price'])
+
+    context = render_to_string("core/async/cart-list.html", {"cart_data":request.session['cart_data_obj'],'totalcartitems':len(request.session['cart_data_obj']), 'cart_total_amount': cart_total_amount})
+    return JsonResponse({"data": context, 'totalcartitems':len(request.session['cart_data_obj'])})
+
+def checkout_view(request):
+    host = request.get_host()
+    paypal_dict = {
+        'business': settings.PAYPAL_RECEIVER_EMAIL,
+        'amount': '7.96',
+        'item_name': "Oder-Item-No-3",
+        'invoice': 'INVOICE_NO-3',
+        'currency_code': "USD",
+        'notify_url': 'http://{}{}'.format(host, reverse("core:paypal-ipn")),
+        'return_url': 'http://{}{}'.format(host, reverse("core:payment-completed")),
+        'cancel_url': 'http://{}{}'.format(host, reverse("core:payment-failed")),
+
+
+    }
+    paypal_payment_button = PayPalPaymentsForm(initial=paypal_dict)
+    cart_total_amount = 0
+    if 'cart_data_obj' in request.session:
+        for p_id, item in request.session['cart_data_obj'].items():
+            cart_total_amount += int(item['qty']) * float(item['price'])
+        return render(request, "core/checkout.html", {"cart_data":request.session['cart_data_obj'],'totalcartitems':len(request.session['cart_data_obj']), 'cart_total_amount': cart_total_amount, 'paypal_payment_button': paypal_payment_button})
+
+def payment_completed_view(request):
+    cart_total_amount = 0
+    if 'cart_data_obj' in request.session:
+        for p_id, item in request.session['cart_data_obj'].items():
+            cart_total_amount += int(item['qty']) * float(item['price'])
+    return render(request, "core/payment-completed.html", {"cart_data": request.session['cart_data_obj'],
+                                                  'totalcartitems': len(request.session['cart_data_obj']),
+                                                  'cart_total_amount': cart_total_amount})
+
+
+def payment_failed_view(request):
+    return render(request, 'core/payment-failed.html')
