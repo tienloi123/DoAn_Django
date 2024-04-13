@@ -3,7 +3,7 @@ from paypal.standard.ipn import views as paypal_ipn_views
 from core import views
 from core.views import intro, index, category_list_view, product_list_view, category_product_list_view, \
     product_detail_view, ajax_add_review, add_to_cart, cart_view, delete_item_from_cart, update_cart, checkout_view, \
-    payment_completed_view, payment_failed_view, test_view
+    payment_completed_view, payment_failed_view,glass_try,customer_dashboard
 
 app_name = "core"
 
@@ -34,7 +34,9 @@ urlpatterns = [
     path("payment-completed/",payment_completed_view, name="payment-completed"),
     #payment fail
     path("payment-failed/",payment_failed_view, name="payment-failed"),
-    path("test/",test_view, name="test"),
+    path("glass_try/", glass_try, name="glass_try"),
+    # dashboard
+    path("dashboard/", customer_dashboard, name="dashboard"),
 
 ]
 
