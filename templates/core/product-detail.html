@@ -105,14 +105,18 @@
 <!--						<input type="hidden" id="product-title" value="{{ p.title }}">-->
 <!--							<input type="hidden" value="1" id="product-quantity" class="product-quantity-{{ p.id }}">-->
 							<input type="hidden" value="{{ p.pid }}"  class="product-pid-{{ p.id }}">
-							<input type="hidden" value="{{ p.image.url }}"  class="product-image-{{ p.id }}">
+							<input type="hidden" value="{{ p.image.url }}"  class="product-image-{{ p.id }} product-item-image">
 
 							<input type="hidden" value="{{ p.id }}"  class="product-id-{{ p.id }}">
 							<input type="hidden" value="{{ p.title }}"  class="product-title-{{ p.id }}">
 
 <!--						<button type="submit" id="add-to-cart-btn" class="btn btn-primary btn-cart m-0" data-target="" data-toggle="l"><i class="material-icons">shopping_cart</i> Add To Cart</button>-->
 						<button type="submit" class="btn btn-primary btn-cart m-0" data-index="{{ p.id }}" id="add-to-cart-btn-btn-btn" ><i class="material-icons">shopping_cart</i><span>Add to cart</span></button>
+<<<<<<< HEAD
 <div  class="btn btn-primary" ><a href="{% url 'core:test' %} "> Thử kính</a> </div>
+=======
+													<button id="glass_try">  Glass Try </button>
+>>>>>>> 43074547d84c9b41f1ef93325009163f0499c7ba
 
 					</div>
 					<div class="tt-links d-flex align-items-center float-left w-100 mb-15">
@@ -654,6 +658,18 @@ s0.parentNode.insertBefore(s1,s0);
 })();
 </script>
 <!--End of Tawk.to Script-->
+  <script>
+        // Script để gửi đường dẫn ảnh cho hàm glass_try khi click vào nút Try Glass
+        const productImage = $(".product-item-image").val();
+        document.getElementById('glass_try').addEventListener('click', function() {
+            fetch("{% url 'core:glass_try' %}?glass_image_path=" + productImage)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(error => console.error(error));
+        });
+    </script>
  </body>
 </html>
 
