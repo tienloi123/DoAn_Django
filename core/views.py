@@ -2,8 +2,8 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 
-from core.models import Product, Category, Vendor, CartOrder, CartOrderItems, ProductImages, ProductReview, wishlist, \
-    Address
+from core.models import Product, Category, Vendor, CartOrder, ProductImages, ProductReview, wishlist_model, \
+    Address, CartOrderItems
 from core.forms import ProductReviewForm
 from django.db.models import Count, Avg
 from django.contrib import messages
@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from paypal.standard.forms import PayPalPaymentsForm
 import cv2
 import numpy as np
+from django.core import serializers
 
 
 # Create your views here.
@@ -153,7 +154,7 @@ def cart_view(request):
     cart_total_amount = 0
     if 'cart_data_obj' in request.session:
         for p_id, item in request.session['cart_data_obj'].items():
-            cart_total_amount += int(item['qty']) * float(item['price'])
+                cart_total_amount += int(item['qty']) * float(item['price'])
         return render(request, "core/cart.html", {"cart_data":request.session['cart_data_obj'],'totalcartitems':len(request.session['cart_data_obj']), 'cart_total_amount': cart_total_amount})
     else:
         messages.warning(request, "Giỏ hàng trống")
@@ -194,25 +195,59 @@ def update_cart(request):
     return JsonResponse({"data": context, 'totalcartitems':len(request.session['cart_data_obj'])})
 
 def checkout_view(request):
+    cart_total_amount = 0
+    total_amount = 0
+
+    if 'cart_data_obj' in request.session:
+        # Tính tổng số tiền cho đơn hàng
+        for p_id, item in request.session['cart_data_obj'].items():
+            total_amount += int(item['qty']) * float(item['price'])
+
+        # Tạo đơn hàng mới và lưu vào cơ sở dữ liệu
+        order = CartOrder.objects.create(
+            user=request.user,
+            price=total_amount
+        )
+
+        # Lưu thông tin sản phẩm trong giỏ hàng vào cơ sở dữ liệu
+        for p_id, item in request.session['cart_data_obj'].items():
+            cart_order_products = CartOrderItems.objects.create(
+                order=order,
+                invoice_no="INVOICE_NO" + str(order.id),
+                item=item['title'],
+                image=item['image'],
+                qty=item['qty'],
+                price=item['price'],
+                total=float(item['qty']) * float(item['price'])
+            )
+
+        # Xóa giỏ hàng sau khi đã đặt hàng thành công
+        # del request.session['cart_data_obj']
+
     host = request.get_host()
     paypal_dict = {
         'business': settings.PAYPAL_RECEIVER_EMAIL,
-        'amount': '7.96',
-        'item_name': "Oder-Item-No-3",
-        'invoice': 'INVOICE_NO-3',
+        'amount': total_amount,
+        'item_name': "Order-Item-No-" + str(order.id),
+        'invoice': "INVOICE_NO-" + str(order.id),
         'currency_code': "USD",
         'notify_url': 'http://{}{}'.format(host, reverse("core:paypal-ipn")),
         'return_url': 'http://{}{}'.format(host, reverse("core:payment-completed")),
         'cancel_url': 'http://{}{}'.format(host, reverse("core:payment-failed")),
-
-
     }
     paypal_payment_button = PayPalPaymentsForm(initial=paypal_dict)
-    cart_total_amount = 0
-    if 'cart_data_obj' in request.session:
-        for p_id, item in request.session['cart_data_obj'].items():
-            cart_total_amount += int(item['qty']) * float(item['price'])
-        return render(request, "core/checkout.html", {"cart_data":request.session['cart_data_obj'],'totalcartitems':len(request.session['cart_data_obj']), 'cart_total_amount': cart_total_amount, 'paypal_payment_button': paypal_payment_button})
+    try:
+        active_address = Address.objects.get(user=request.user, status=True)
+    except:
+        messages.warning(request, "There are multiple address, only one should be ACTIVATED.")
+        active_address = None
+    return render(request, "core/checkout.html", {
+        "cart_data": request.session.get('cart_data_obj', {}),
+        'totalcartitems': len(request.session.get('cart_data_obj', {})),
+        'cart_total_amount': cart_total_amount,
+        'paypal_payment_button': paypal_payment_button,
+        "active_address":active_address
+    })
 
 def payment_completed_view(request):
     cart_total_amount = 0
@@ -228,59 +263,89 @@ def payment_failed_view(request):
     return render(request, 'core/payment-failed.html')
 
 
-def test_view(request):
-    face_detection_model = cv2.CascadeClassifier("models/haarcascade_frontalface_alt.xml")
-    eye_detection_model = cv2.CascadeClassifier("models/haarcascade_eye.xml")
+def customer_dashboard(request):
+    orders = CartOrder.objects.filter(user=request.user).order_by("-id")
+    address = Address.objects.filter(user=request.user)
 
-    vid = cv2.VideoCapture(0)
+    if request.method == "POST":
+        address = request.POST.get("address")
+        mobile = request.POST.get("mobile")
 
-    while True:
-        ret, image = vid.read()
-        if ret:
-            gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            faces = face_detection_model.detectMultiScale(gray_image, scaleFactor=1.3, minNeighbors=5,
-                                                          minSize=(200, 200))
+        new_address = Address.objects.create(
+            user = request.user,
+            address = address,
+            mobile = mobile,
+        )
+        messages.success(request, "Address Added Successfully")
+        return redirect("core:dashboard")
+    context = {
+        "orders": orders,
+        "address": address,
+    }
+    return render(request, 'core/dashboard.html', context)
+def order_detail(request, id):
+    order = CartOrder.objects.get(user=request.user,id = id)
+    order_items = CartOrderItems.objects.filter(order = order)
 
-            for (face_x, face_y, face_w, face_h) in faces:
-                face_roi = gray_image[face_y: face_y + face_h, face_x: face_x + face_w]
-                eyes = eye_detection_model.detectMultiScale(face_roi, scaleFactor=1.1, minNeighbors=5,
-                                                            minSize=(100, 100))
+    context = {
+        "order_items": order_items,
+    }
+    return render(request, 'core/order-detail.html',context)
 
-                eye_centers = []
-                for (eye_x, eye_y, eye_w, eye_h) in eyes:
-                    eye_centers.append((face_x + int(eye_x + eye_w / 2), face_y + int(eye_y + eye_h / 2)))
+def make_address_default(request):
+    id = request.GET['id']
+    Address.objects.update(status=False)
+    Address.objects.filter(id=id).update(status=True)
+    return JsonResponse({"boolean": True})
 
-                if len(eye_centers) >= 2:
-                    glass_image = cv2.imread("glass_image/06.jpg")
-                    glass_width_resize = 2.5 * abs(eye_centers[1][0] - eye_centers[0][0])
-                    scale_factor = glass_width_resize / glass_image.shape[1]
-                    resize_glasses = cv2.resize(glass_image, None, fx=scale_factor, fy=scale_factor)
 
-                    if eye_centers[0][0] < eye_centers[1][0]:
-                        left_eye_x = eye_centers[0][0]
-                    else:
-                        left_eye_x = eye_centers[1][0]
+def add_to_wishlist(request):
+    product_id = request.GET['id']
+    product = Product.objects.get(id=product_id)
+    print("product id issssssssss:" + product_id)
 
-                    glass_x = left_eye_x - 0.28 * resize_glasses.shape[1]
-                    glass_y = face_y + 0.8 * resize_glasses.shape[0]
+    context = {}
+    wishlist_count = wishlist_model.objects.filter(product=product, user = request.user).count()
+    print(wishlist_count)
 
-                    overlay_image = np.ones(image.shape, np.uint8) * 255
-                    overlay_image[int(glass_y): int(glass_y + resize_glasses.shape[0]),
-                                  int(glass_x): int(glass_x + resize_glasses.shape[1])] = resize_glasses
+    if wishlist_count>0:
+        context = {
+            "bool": True
+        }
+    else:
+        new_wishlist = wishlist_model.objects.create(
+            user=request.user,
+            product = product,
+        )
+        context = {
+            "bool": True
+        }
+    return JsonResponse(context)
+def wishlist_view(request):
+    try:
+        wishlist = wishlist_model.objects.all()
+    except:
+        wishlist=None
 
-                    gray_overlay = cv2.cvtColor(overlay_image, cv2.COLOR_BGR2GRAY)
-                    _, mask = cv2.threshold(gray_overlay, 127, 255, cv2.THRESH_BINARY)
+    context = {
+        "w":wishlist
+    }
+    return render(request, "core/wishlist.html", context)
 
-                    background = cv2.bitwise_and(image, image, mask=cv2.bitwise_not(mask))
-                    glasses = cv2.bitwise_and(overlay_image, overlay_image, mask=mask)
+def remove_wishlist(request):
+    try:
+        pid = request.GET['id']
+        wishlist = wishlist_model.objects.filter(user=request.user)
+        product = wishlist_model.objects.get(id=pid)
+        product.delete()
 
-                    final_image = cv2.add(background, glasses)
-                    _, encoded_image = cv2.imencode('.jpg', final_image)
-                    response = HttpResponse(encoded_image.tobytes(), content_type="image/jpeg")
-                    return response
+        # Serialize wishlist queryset to JSON
+        wishlist_json = serializers.serialize('json', wishlist)
 
-        if cv2.waitKey(1) == ord('q'):
-            break
+        # Render wishlist HTML asynchronously
+        wishlist_html = render_to_string("core/async/wishlist-list.html", {"w": wishlist})
 
-    vid.release()
-    cv2.destroyAllWindows()
+        # Return JSON response with updated wishlist HTML and JSON data
+        return JsonResponse({"data": wishlist_html, "w": wishlist_json})
+    except Exception as e:
+        return JsonResponse({"error": str(e)})

@@ -4,7 +4,7 @@ from shortuuid.django_fields import ShortUUIDField
 from userauths.models import User
 
 STATUS_CHOICE = (
-    ("process", "Processing"),
+    ("processing", "Processing"),
     ("shipped", "Shipped"),
     ("delivered", "Delivered"),
 )
@@ -143,6 +143,8 @@ class CartOrderItems(models.Model):
     class Meta:
         verbose_name_plural = "Cart Order Items"
 
+    def category_image(self):
+        return mark_safe('<img src="{}" width="50" height="50" />'.format(self.image.url))
     def order_img(self):
         return mark_safe('<img src="%s" width="50" height="50" />' % self.image.url)
 
@@ -163,19 +165,20 @@ class ProductReview(models.Model):
     def get_rating(self):
         return self.rating
 
-class wishlist(models.Model):
+class wishlist_model(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name_plural = "Wishlist"
+        verbose_name_plural = "wishlists"
 
     def __str__(self):
         return self.product.title
 
 class Address(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    mobile = models.CharField(max_length=300, null=True)
     address = models.CharField(max_length=100, null=True)
     status = models.BooleanField(default=False)
 
